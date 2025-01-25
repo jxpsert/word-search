@@ -1,6 +1,6 @@
 import { Letter } from "./Letter";
 import { Word } from "./Word";
-import { createCanvas, loadImage } from "canvas";
+import { createCanvas } from "canvas";
 import * as fs from "fs";
 
 export class WordSearch {
