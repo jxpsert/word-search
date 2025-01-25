@@ -122,12 +122,14 @@ export class WordSearch {
 
         if (isValid && foundWord.length === wordLength) {
           const newWord = new Word(word, foundWord);
+          console.log(`Found word: ${newWord._word}`);
           this._foundWords.push(newWord);
           return newWord;
         }
       }
     }
 
+    console.log(`Word not found: ${word}`);
     return undefined;
   }
 
@@ -164,9 +166,8 @@ export class WordSearch {
    * The unused letters will be displayed at the bottom of the image
    */
   toImage(filepath: string = "./wordsearch.png") {
-    const canvas = createCanvas(50 * this._columns, 50 * this._rows + 15);
+    const canvas = createCanvas(this._columns * 50 + 25, this._rows * 50 + 25);
     const context = canvas.getContext("2d");
-
     context.fillStyle = "white";
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = "black";
@@ -179,16 +180,11 @@ export class WordSearch {
       }
     }
 
-    // For each found word, draw a random coloured line connecting the start and end coordinates
-
     for (const word of this._foundWords) {
       const start = word._startCoordinates;
       const end = word._endCoordinates;
 
-      const randomColor = `rgb(${Math.random() * 255}, ${
-        Math.random() * 255
-      }, ${Math.random() * 255})`;
-      context.strokeStyle = randomColor;
+      context.strokeStyle = word._colour;
       context.lineWidth = 15;
       context.globalAlpha = 0.75;
 
@@ -198,7 +194,6 @@ export class WordSearch {
       context.stroke();
     }
 
-    // Add a text label at the bottom of the image with the unused letters
     const unusedLetters = this.unusedLetters()
       .map((letter) => letter._letter)
       .join("");
@@ -206,10 +201,45 @@ export class WordSearch {
     context.font = "15px Arial";
     context.fillText(unusedLetters, 10, this._rows * 50 + 10);
 
-    // Save the image
+    context.strokeStyle = "red";
+    context.lineWidth = 4;
+    context.globalAlpha = 1;
+
+    for (const letter of this.unusedLetters()) {
+      context.beginPath();
+      context.arc(
+        letter._column * 50 + 25,
+        letter._row * 50 + 25,
+        20,
+        0,
+        2 * Math.PI
+      );
+      context.stroke();
+    }
+
+    // From the top right, draw a text rotated 90 degrees (heading downwards, top of the letter on the right), same font size
+    // Text should be the date and time of the image creation
+    const date = new Date().toISOString().split("T")[0].replace(/-/g, "/");
+    context.save();
+    context.translate(canvas.width - 20, 10);
+    context.rotate(Math.PI / 2);
+    context.textAlign = "left";
+    context.fillText(date + " - https://platenburg.dev", 0, 0);
+    context.restore();
+
+    // Save the image with proper stream handling
     const out = fs.createWriteStream(filepath);
     const stream = canvas.createPNGStream();
-    stream.pipe(out);
+
+    return new Promise<void>((resolve, reject) => {
+      stream.pipe(out);
+      out.on("finish", () => {
+        resolve(); // Resolve the promise once the writing is done
+      });
+      out.on("error", (err) => {
+        reject(err); // Reject the promise on an error
+      });
+    });
   }
 
   /**
