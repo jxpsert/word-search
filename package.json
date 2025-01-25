@@ -1,14 +1,15 @@
 {
-  "name": "woordzoeker",
+  "name": "word-search",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "repository": "https://github.com/jxpsert/word-search",
   "scripts": {
     "test": "tsc && node build/index.js",
     "build": "tsc"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "jxpsert",
+  "license": "MPL-2.0",
   "devDependencies": {
     "typescript": "^5.7.3"
   },
